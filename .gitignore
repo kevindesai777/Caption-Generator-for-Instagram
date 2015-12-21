@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 *.iml
 .gradle
 /local.properties
@@ -35,4 +35,4 @@ proguard/
 
 # Log Files
 *.log
->>>>>>> 8c1aadb88b8e4443ec2583e7b97979c51519b5f5
+
