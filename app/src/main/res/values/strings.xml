@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Caption!</string>
+    <string name="action_settings">Settings</string>
+    <string name="captionText">Recognizing Image</string>
+    <string name="selectImg">Select an image!</string>
+    <string name="copyClip">Copy to Clipboard</string>
+
+</resources>
