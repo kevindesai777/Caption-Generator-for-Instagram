@@ -48,8 +48,8 @@ public class MainActivity extends AppCompatActivity {
     private ImageView imageView;
     private EditText textView;
     private TextView selectImage;
-    private static final String APP_ID = "Iyyadv-rZs3xtlk_5QVnPd-fmSSNuSwQUGigKYVs";
-    private static final String APP_SECRET = "vA5htLCtjrGceYcREcgsXx7_g2Ymebt9_tAah_Pi";
+    private static final String APP_ID = "";
+    private static final String APP_SECRET = "";
     private final ClarifaiClient client = new ClarifaiClient(APP_ID,APP_SECRET );
     private Button copyClip;
     private ProgressBar progressBar;
