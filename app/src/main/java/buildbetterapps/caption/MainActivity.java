@@ -16,31 +16,26 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-
-
+//Marshmallow Permissions
 import com.afollestad.assent.Assent;
 import com.afollestad.assent.AssentCallback;
 import com.afollestad.assent.PermissionResultSet;
+//Clarifai Library
 import com.clarifai.api.ClarifaiClient;
 import com.clarifai.api.RecognitionRequest;
 import com.clarifai.api.RecognitionResult;
 import com.clarifai.api.Tag;
 import com.clarifai.api.exception.ClarifaiException;
 
-
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-
-
 
 public class MainActivity extends AppCompatActivity {
 
@@ -53,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
     private final ClarifaiClient client = new ClarifaiClient(APP_ID,APP_SECRET );
     private Button copyClip;
     private ProgressBar progressBar;
+    private Uri realUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,12 +96,7 @@ public class MainActivity extends AppCompatActivity {
                     // Always show the chooser (if there are multiple options available)
                     startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_REQUEST);
                 }
-
-
             }
-
-
-
         });
 
         copyClip.setOnClickListener(new View.OnClickListener(){
@@ -115,8 +106,19 @@ public class MainActivity extends AppCompatActivity {
                         getSystemService(Context.CLIPBOARD_SERVICE);
                 ClipData clip = ClipData.newPlainText("all captions",textView.getText());
                 clipboard.setPrimaryClip(clip);
-                Snackbar.make(view, "Text copied to clipboard.", Snackbar.LENGTH_LONG).show();
-
+                Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.instagram.android");
+                if(launchIntent!=null)
+                {
+                    Snackbar.make(view, "Text copied, opening Instagram", Snackbar.LENGTH_SHORT).show();
+                    Intent shareIntent = new Intent(android.content.Intent.ACTION_SEND);
+                    shareIntent.setType("image/*");
+                    shareIntent.putExtra(Intent.EXTRA_STREAM, realUri);
+                    shareIntent.setPackage("com.instagram.android");
+                    startActivity(shareIntent);
+                }
+                else{
+                    Snackbar.make(view, "Text copied", Snackbar.LENGTH_SHORT).show();
+                }
             }
         });
     }
@@ -143,30 +145,6 @@ public class MainActivity extends AppCompatActivity {
         Assent.handleResult(permissions, grantResults);
     }
 
-    //Picasso/Glide, Okhttp, material dialogs, butterknife(optional) permissions
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -175,19 +153,15 @@ public class MainActivity extends AppCompatActivity {
 
             Uri uri = data.getData();
             String realPath = getImageUrlWithAuthority(getApplicationContext(), uri);
-            Uri realUri = Uri.parse(realPath);
+            realUri = Uri.parse(realPath);
             Bitmap bitmap = loadBitmapFromUri(realUri);
 
             if(bitmap != null)
             {
                 selectImage.setVisibility(View.INVISIBLE);
                 imageView.setVisibility(View.VISIBLE);
-                //textView.setVisibility(View.VISIBLE);
                 progressBar.setVisibility(View.VISIBLE);
                 imageView.setImageBitmap(bitmap);
-
-
-
 
                 new AsyncTask<Bitmap, Void, RecognitionResult>() {
                     @Override protected RecognitionResult doInBackground(Bitmap... bitmaps) {
@@ -200,49 +174,15 @@ public class MainActivity extends AppCompatActivity {
 
             }
             else {
-                textView.setText("Locha");
+                textView.setText(getResources().getString(R.string.errorMessage));
             }
-
-
-            //passImagetoServer(getImageUrlWithAuthority(getApplicationContext(), uri));
         }
     }
-
-    /*public String getImagePath(Uri uri){
-        Cursor cursor = getContentResolver().query(uri, null, null, null, null);
-        cursor.moveToFirst();
-        String document_id = cursor.getString(0);
-        document_id = document_id.substring(document_id.lastIndexOf(":")+1);
-        cursor.close();
-
-        cursor = getContentResolver().query(
-                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                null, MediaStore.Images.Media._ID + " = ? ", new String[]{document_id}, null);
-        cursor.moveToFirst();
-        String path = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
-        cursor.close();
-
-        return path;
-    }
-
-
-    public static Uri handleImageUri(Uri uri) {
-        Pattern pattern = Pattern.compile("(content://media/.*\\d)");
-        if (uri.getPath().contains("content")) {
-            Matcher matcher = pattern.matcher(uri.getPath());
-            if (matcher.find())
-                return Uri.parse(matcher.group(1));
-            else
-                throw new IllegalArgumentException("Cannot handle this URI");
-        } else
-            return uri;
-    }*/
 
 
     private Bitmap loadBitmapFromUri(Uri uri) {
         try {
-            // The image may be large. Load an image that is sized for display. This follows best
-            // practices from http://developer.android.com/training/displaying-bitmaps/load-bitmap.html
+            // The image may be large. Load an image that is sized for display.
             BitmapFactory.Options opts = new BitmapFactory.Options();
             opts.inJustDecodeBounds = true;
             BitmapFactory.decodeStream(getContentResolver().openInputStream(uri), null, opts);
@@ -292,20 +232,16 @@ public class MainActivity extends AppCompatActivity {
 
     private RecognitionResult recognizeBitmap(Bitmap bitmap) {
         try {
-            // Scale down the image. This step is optional. However, sending large images over the
-            // network is slow and  does not significantly improve recognition performance.
+            // Scale down the image.
             Bitmap scaled = Bitmap.createScaledBitmap(bitmap, 320,
                     320 * bitmap.getHeight() / bitmap.getWidth(), true);
-
             // Compress the image as a JPEG.
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             scaled.compress(Bitmap.CompressFormat.JPEG, 90, out);
             byte[] jpeg = out.toByteArray();
-
             // Send the JPEG to Clarifai and return the result.
             return client.recognize(new RecognitionRequest(jpeg)).get(0);
         } catch (ClarifaiException e) {
-            //Log.e(TAG, "Clarifai error", e);
             return null;
         }
     }
@@ -324,13 +260,11 @@ public class MainActivity extends AppCompatActivity {
                 copyClip.setVisibility(View.VISIBLE);
 
             } else {
-                //Log.e(TAG, "Clarifai: " + result.getStatusMessage());
-                textView.setText("Sorry, there was an error recognizing your image.");
+                textView.setText(getResources().getString(R.string.errorMessageImage));
             }
         } else {
-            textView.setText("Sorry, there was an error recognizing your image.");
+            textView.setText(getResources().getString(R.string.errorMessageImage));
         }
-        //selectButton.setEnabled(true);
     }
 
 }

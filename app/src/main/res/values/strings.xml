@@ -3,6 +3,8 @@
     <string name="action_settings">Settings</string>
     <string name="captionText">Recognizing Image</string>
     <string name="selectImg">Select an image!</string>
-    <string name="copyClip">Copy to Clipboard</string>
+    <string name="copyClip">Copy Captions, Open Instagram</string>
+    <string name="errorMessage">Error</string>
+    <string name="errorMessageImage">Sorry, there was an error recognizing your image.</string>
 
 </resources>
