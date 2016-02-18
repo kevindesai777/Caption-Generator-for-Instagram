@@ -117,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
                     startActivity(shareIntent);
                 }
                 else{
-                    Snackbar.make(view, "Text copied", Snackbar.LENGTH_SHORT).show();
+                    Snackbar.make(view, "Text copied, download Instagram from the Play Store.", Snackbar.LENGTH_SHORT).show();
                 }
             }
         });
